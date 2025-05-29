@@ -1,0 +1,33 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: "roboto", sans-serif;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+a {
+  color: #60bf70 !important;
+  text-decoration: none;
+  padding: 20px;
+  margin-top: 20px;
+}
+
+a:hover {
+  color: black !important;
+}
+
+a.active {
+  color: #57d96d !important;
+}
+
+@media print {
+  body {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}
