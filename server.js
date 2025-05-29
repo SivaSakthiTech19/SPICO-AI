@@ -33,7 +33,7 @@ const app = express();
 
 // Middleware
 app.use(cors({
-  origin: "https://spico-ai-v1-h3c07lbq9-sivasakthis-projects-b15394a7.vercel.app/",
+ origin: "https://spico-ai-v1-h3c07lbq9-sivasakthis-projects-b15394a7.vercel.app",
   credentials: true,
 }));
 app.use(express.json());
