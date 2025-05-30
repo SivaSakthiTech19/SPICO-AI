@@ -37,7 +37,7 @@ const Summary = () => {
     setError("");
 
     try {
-      const { data } = await axios.post("/api/v1/cohere/summary", { text });
+      const { data } = await axios.post(`${process.env.REACT_APP_API_URL}/api/v1/cohere/summary`, { text });
       setSummary(data.summary || data);
     } catch (err) {
       console.error("Error:", err);

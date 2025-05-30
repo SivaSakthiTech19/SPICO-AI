@@ -34,7 +34,7 @@ const Chatbot = () => {
     setError("");
 
     try {
-      const { data } = await axios.post("/api/v1/cohere/chatbot", { text });
+      const { data } = await axios.post(`${process.env.REACT_APP_API_URL}/api/v1/cohere/chatbot`, { text });
       setMessages((prevMessages) => [...prevMessages, { text: data.message, sender: "bot" }]);
     } catch (err) {
       console.error("Error:", err);

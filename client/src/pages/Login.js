@@ -38,7 +38,7 @@ const Login = () => {
     try {
       const payload = { email, password };
 
-      const { data } = await axios.post("/api/v1/auth/login", payload);
+      const { data } = await axios.post(`${process.env.REACT_APP_API_URL}/api/v1/auth/login`, payload);
       toast.success("Login Successfully");
       localStorage.setItem("authToken", data.accessToken);
       navigate("/");

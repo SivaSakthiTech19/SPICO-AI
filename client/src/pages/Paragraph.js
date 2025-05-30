@@ -34,7 +34,7 @@ const Paragraph = () => {
     setError("");
 
     try {
-      const { data } = await axios.post("/api/v1/cohere/paragraph", { text });
+      const { data } = await axios.post(`${process.env.REACT_APP_API_URL}/api/v1/cohere/paragraph`, { text });
       setPara(data.paragraph);
     } catch (err) {
       console.error("Error:", err);

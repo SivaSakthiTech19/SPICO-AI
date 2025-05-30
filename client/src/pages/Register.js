@@ -37,7 +37,7 @@ const Register = () => {
 
   const handleVerifyOtpAndRegister = async () => {
     try {
-      await axios.post("/api/v1/auth/verify-email-otp", { email, otp });
+      await axios.post(`${process.env.REACT_APP_API_URL}/api/v1/auth/verify-email-otp`, { email, otp });
       // If OTP is valid, now create the user
       await axios.post("/api/v1/auth/register", {
         username,

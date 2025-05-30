@@ -37,7 +37,7 @@ const Codeconverter = () => {
     setError("");
 
     try {
-      const { data } = await axios.post("/api/v1/cohere/codeconverter", { text });
+      const { data } = await axios.post(`${process.env.REACT_APP_API_URL}/api/v1/cohere/codeconverter`, { text });
       setCode(data.code || data);
     } catch (err) {
       console.error("Error:", err);

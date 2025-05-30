@@ -30,7 +30,7 @@ const ImageAI = () => {
     }
     setLoading(true);
     try {
-      const { data } = await axios.post("/api/v1/cohere/generate-image", { prompt });
+      const { data } = await axios.post(`${process.env.REACT_APP_API_URL}/api/v1/cohere/generate-image`, { prompt });
       setImage(data.image);
     } catch (err) {
       setError(err.response?.data?.error || "Failed to generate image");
