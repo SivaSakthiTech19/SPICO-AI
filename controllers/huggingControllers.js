@@ -13,7 +13,7 @@ const cohereChat = async (message, temperature = 0.5) => {
   try {
     console.log("Cohere API Call:", { message, temperature });
     const res = await cohere.chat({
-      model: "command-r",
+      model: "command-r7b-12-2024", // Updated model
       message,
       temperature,
     });
@@ -29,15 +29,17 @@ const cohereChat = async (message, temperature = 0.5) => {
 const fetchWikipediaSummary = async (query) => {
   try {
     console.log("Fetching Wikipedia summary for:", query);
-    
-    const searchUrl = `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(query)}&format=json`;
+
+    const searchUrl = `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(
+      query
+    )}&format=json`;
     const searchResponse = await axios.get(searchUrl, {
       headers: {
-        "User-Agent": "SPICO-AI/1.0 (Educational Project)"
+        "User-Agent": "SPICO-AI/1.0 (Educational Project)",
       },
-      timeout: 5000
+      timeout: 5000,
     });
-    
+
     const pageTitle = searchResponse.data.query.search[0]?.title;
     console.log("Wikipedia page found:", pageTitle);
 
@@ -45,14 +47,16 @@ const fetchWikipediaSummary = async (query) => {
       return "";
     }
 
-    const summaryUrl = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(pageTitle)}`;
+    const summaryUrl = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(
+      pageTitle
+    )}`;
     const summaryResponse = await axios.get(summaryUrl, {
       headers: {
-        "User-Agent": "SPICO-AI/1.0 (Educational Project)"
+        "User-Agent": "SPICO-AI/1.0 (Educational Project)",
       },
-      timeout: 5000
+      timeout: 5000,
     });
-    
+
     const extract = summaryResponse.data.extract || "";
     console.log("Wikipedia extract fetched successfully");
     return extract;
@@ -90,7 +94,10 @@ const paragraphController = async (req, res) => {
     }
 
     console.log("Paragraph request:", text);
-    const paragraph = await cohereChat(`Write a detailed and informative paragraph about: ${text}`, 0.6);
+    const paragraph = await cohereChat(
+      `Write a detailed and informative paragraph about: ${text}`,
+      0.6
+    );
     res.status(200).json({ paragraph });
   } catch (error) {
     console.error("Paragraph Error:", error.message);
