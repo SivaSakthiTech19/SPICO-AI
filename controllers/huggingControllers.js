@@ -13,7 +13,7 @@ const cohereChat = async (message, temperature = 0.5) => {
   try {
     console.log("Cohere API Call:", { message, temperature });
     const res = await cohere.chat({
-      model: "command-r-plus",
+      model: "command-r",
       message,
       temperature,
     });
@@ -30,27 +30,35 @@ const fetchWikipediaSummary = async (query) => {
   try {
     console.log("Fetching Wikipedia summary for:", query);
     
-    // Search Wikipedia
-    const searchUrl = `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(query)}&format=json&origin=*`;
-    const searchResponse = await axios.get(searchUrl);
+    const searchUrl = `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(query)}&format=json`;
+    const searchResponse = await axios.get(searchUrl, {
+      headers: {
+        "User-Agent": "SPICO-AI/1.0 (Educational Project)"
+      },
+      timeout: 5000
+    });
     
     const pageTitle = searchResponse.data.query.search[0]?.title;
     console.log("Wikipedia page found:", pageTitle);
 
     if (!pageTitle) {
-      return "No relevant information found on Wikipedia.";
+      return "";
     }
 
-    // Get summary
     const summaryUrl = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(pageTitle)}`;
-    const summaryResponse = await axios.get(summaryUrl);
+    const summaryResponse = await axios.get(summaryUrl, {
+      headers: {
+        "User-Agent": "SPICO-AI/1.0 (Educational Project)"
+      },
+      timeout: 5000
+    });
     
-    const extract = summaryResponse.data.extract || "No summary available.";
-    console.log("Wikipedia extract:", extract);
+    const extract = summaryResponse.data.extract || "";
+    console.log("Wikipedia extract fetched successfully");
     return extract;
   } catch (error) {
     console.error("Wikipedia API Error:", error.message);
-    return "Failed to fetch Wikipedia data. Please try again later.";
+    return "";
   }
 };
 
@@ -103,7 +111,7 @@ const chatbotController = async (req, res) => {
 
     // Try Wikipedia first
     const wikiAnswer = await fetchWikipediaSummary(text);
-    if (wikiAnswer && wikiAnswer !== "No relevant information found on Wikipedia.") {
+    if (wikiAnswer && wikiAnswer.trim()) {
       return res.status(200).json({ message: wikiAnswer });
     }
 
