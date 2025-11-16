@@ -8,69 +8,49 @@ const cohere = new CohereClient({
   token: process.env.COHERE_API_KEY,
 });
 
+// === Cohere Chat Function ===
 const cohereChat = async (message, temperature = 0.5) => {
   try {
+    console.log("Cohere API Call:", { message, temperature });
     const res = await cohere.chat({
-      model: "command-medium-nightly",
+      model: "command-r-plus",
       message,
       temperature,
     });
+    console.log("Cohere Response:", res.text);
     return res.text;
   } catch (error) {
-    console.error("Cohere Chat API Error:", error.message);
-    throw new Error("Failed to connect to the language model.");
+    console.error("Cohere Chat API Error:", error.message || error);
+    throw new Error("Failed to connect to the Cohere API.");
   }
 };
 
+// === Fetch Wikipedia Summary ===
 const fetchWikipediaSummary = async (query) => {
-  const searchUrl = `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(query)}&format=json&origin=*`;
-
   try {
+    console.log("Fetching Wikipedia summary for:", query);
+    
+    // Search Wikipedia
+    const searchUrl = `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(query)}&format=json&origin=*`;
     const searchResponse = await axios.get(searchUrl);
+    
     const pageTitle = searchResponse.data.query.search[0]?.title;
+    console.log("Wikipedia page found:", pageTitle);
 
     if (!pageTitle) {
       return "No relevant information found on Wikipedia.";
     }
 
+    // Get summary
     const summaryUrl = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(pageTitle)}`;
     const summaryResponse = await axios.get(summaryUrl);
-    return summaryResponse.data.extract || "No summary available.";
+    
+    const extract = summaryResponse.data.extract || "No summary available.";
+    console.log("Wikipedia extract:", extract);
+    return extract;
   } catch (error) {
     console.error("Wikipedia API Error:", error.message);
     return "Failed to fetch Wikipedia data. Please try again later.";
-  }
-};
-
-// === Fallback Chatbot ===
-const fallbackResponses = {
-  "what is your name": "I am a chatbot created to assist you with various tasks.",
-  "who are you": "I am a virtual assistant here to help you with your queries.",
-  "tell me a joke": "Why did the scarecrow win an award? Because he was outstanding in his field!",
-  "hi": "Hello! How can I assist you today?",
-  "machine learning": "Machine learning is a branch of artificial intelligence focused on building systems that learn from data.",
-  "what is spico": "SPICO is an AI tools platform.", 
-};
-
-// === Chatbot Controller ===
-const chatbotController = async (req, res) => {
-  const { text } = req.body;
-  const normalizedText = text.trim().toLowerCase();
-  if (fallbackResponses[normalizedText]) {
-    return res.status(200).json({ message: fallbackResponses[normalizedText] });
-  }
-
-  try {
-    const wikiAnswer = await fetchWikipediaSummary(text);
-    if (wikiAnswer) {
-      return res.status(200).json({ message: wikiAnswer });
-    }
-
-    const cohereResponse = await cohereChat(`Tell me about: ${text}`);
-    return res.status(200).json({ message: cohereResponse });
-  } catch (error) {
-    console.error("Chatbot Error:", error.message);
-    return res.status(500).json({ error: "Something went wrong, please try again later." });
   }
 };
 
@@ -83,11 +63,12 @@ const summaryController = async (req, res) => {
       return res.status(400).json({ error: "Please provide valid text." });
     }
 
+    console.log("Summary request:", text);
     const summary = await cohereChat(`Summarize the following text:\n\n${text}`, 0.3);
     res.status(200).json({ summary });
   } catch (err) {
     console.error("Summary Error:", err.message);
-    res.status(500).json({ error: "Failed to generate summary." });
+    res.status(500).json({ error: err.message || "Failed to generate summary." });
   }
 };
 
@@ -100,11 +81,38 @@ const paragraphController = async (req, res) => {
       return res.status(400).json({ error: "Invalid input text." });
     }
 
+    console.log("Paragraph request:", text);
     const paragraph = await cohereChat(`Write a detailed and informative paragraph about: ${text}`, 0.6);
     res.status(200).json({ paragraph });
   } catch (error) {
-    console.error("Paragraph Generation Error:", error.message);
-    res.status(500).json({ error: "Failed to generate paragraph." });
+    console.error("Paragraph Error:", error.message);
+    res.status(500).json({ error: error.message || "Failed to generate paragraph." });
+  }
+};
+
+// === Chatbot Controller ===
+const chatbotController = async (req, res) => {
+  try {
+    const { text } = req.body;
+
+    if (!text || typeof text !== "string" || !text.trim()) {
+      return res.status(400).json({ error: "Please provide valid text." });
+    }
+
+    console.log("Chatbot request:", text);
+
+    // Try Wikipedia first
+    const wikiAnswer = await fetchWikipediaSummary(text);
+    if (wikiAnswer && wikiAnswer !== "No relevant information found on Wikipedia.") {
+      return res.status(200).json({ message: wikiAnswer });
+    }
+
+    // Fall back to Cohere
+    const cohereResponse = await cohereChat(`Tell me about: ${text}`, 0.7);
+    res.status(200).json({ message: cohereResponse });
+  } catch (error) {
+    console.error("Chatbot Error:", error.message);
+    res.status(500).json({ error: error.message || "Something went wrong, please try again later." });
   }
 };
 
@@ -112,16 +120,17 @@ const paragraphController = async (req, res) => {
 const codeconverterController = async (req, res) => {
   try {
     const { text } = req.body;
+
     if (!text || typeof text !== "string" || !text.trim()) {
       return res.status(400).json({ error: "Text is required" });
     }
 
-    const prompt = `Write a Python function to ${text}`;
-    const code = await cohereChat(prompt, 0.3);
+    console.log("Code converter request:", text);
+    const code = await cohereChat(`Write a Python function to ${text}`, 0.3);
     res.status(200).json({ language: "Python", description: text, code });
   } catch (err) {
     console.error("Code Converter Error:", err.message);
-    res.status(500).json({ error: "Code generation failed." });
+    res.status(500).json({ error: err.message || "Code generation failed." });
   }
 };
 
